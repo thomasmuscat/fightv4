@@ -139,7 +139,9 @@ def scrape_fighters(include_details: bool = True) -> pd.DataFrame:
         print(f"[fighters] list {letter.upper()}")
         soup = soup_from_url(url, debug_name=f"fighters_{letter}_debug.html" if letter == "a" else None)
         print(f"[fighters] title={soup.title.get_text(strip=True) if soup.title else 'NO_TITLE'}")
-        print(f"[fighters] table_rows={len(soup.select('tr'))} detail_links={len(soup.select('a[href*=\"/fighter-details/\"]'))}")
+        table_rows = len(soup.select("tr"))
+detail_links = len(soup.select('a[href*="/fighter-details/"]'))
+print(f"[fighters] table_rows={table_rows} detail_links={detail_links}")
         found = parse_fighter_list_page(soup)
         print(f"[fighters] {letter.upper()} found={len(found)}")
         for fighter in found:
