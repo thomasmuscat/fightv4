@@ -1,0 +1,68 @@
+name: FightIQ Data Engine Fix V4
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_to_supabase:
+        description: "Upload data to Supabase"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      max_events:
+        description: "Max events to scrape for test. Empty = all"
+        required: false
+        default: "5"
+      max_fighters:
+        description: "Max fighter detail pages for test. Empty = all"
+        required: false
+        default: "20"
+      max_fights:
+        description: "Max fight detail pages for test. Empty = all"
+        required: false
+        default: "50"
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run FightIQ Data Engine
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FIGHTIQ_UPLOAD_TO_SUPABASE: ${{ github.event.inputs.upload_to_supabase || 'false' }}
+          FIGHTIQ_MAX_EVENTS: ${{ github.event.inputs.max_events || '5' }}
+          FIGHTIQ_MAX_FIGHTERS: ${{ github.event.inputs.max_fighters || '20' }}
+          FIGHTIQ_MAX_FIGHTS: ${{ github.event.inputs.max_fights || '50' }}
+          FIGHTIQ_SLEEP_SECONDS: "0.8"
+          FIGHTIQ_USE_CACHE: "false"
+        run: python main.py
+
+      - name: Upload exports
+        uses: actions/upload-artifact@v4
+        with:
+          name: fightiq-v4-exports
+          path: exports/
+          retention-days: 14
+
+      - name: Upload debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: fightiq-v4-debug
+          path: debug/
+          retention-days: 14
